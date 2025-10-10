@@ -14,9 +14,13 @@ public class OrderService {
         try {
             repository.saveOrder(order);
             return "Order processed successfully";
-        } catch (OrderSaveFailedException ex) {
-            return "Order processing failed";
 
+        }
+        catch (OrderSaveFailedException ex) {
+            return "Order processing failed";
+        }
+        catch(Exception ex){
+            throw new NullPointerException("Order is null!");
         }
 
     }

@@ -43,6 +43,15 @@ class OrderServiceTest {
     }
 
     @Test
+    void shouldThrowExceptionWithMessage_OrderIsNull() {
+        Order order = null;
+        when(repositoryMock.saveOrder(order)).thenThrow(new NullPointerException("Order is null!"));
+        Exception exception = assertThrows(NullPointerException.class, () -> service.processOrder(order));
+        assertEquals("Order is null!", exception.getMessage());
+        verify(repositoryMock, times(1)).saveOrder(order);
+    }
+
+    @Test
     void shouldReturn300() {
         Order order = new Order(2, "Bottle", 3, 100.0);
         when(repositoryMock.getOrderById(2)).thenReturn(Optional.of(order));

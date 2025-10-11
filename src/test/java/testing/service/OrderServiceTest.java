@@ -1,6 +1,7 @@
 package testing.service;
 
-import org.junit.jupiter.api.BeforeAll;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import testing.exceptions.EmptyOrderException;
@@ -15,15 +16,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class OrderServiceTest {
-    private static OrderRepository repositoryMock;
-    private static OrderService service;
+    private OrderRepository repositoryMock;
+    private OrderService service;
 
-    @BeforeAll
-    static void init() {
+    @BeforeEach
+    void init() {
         repositoryMock = Mockito.mock(OrderRepository.class);
         service = new OrderService(repositoryMock);
     }
 
+    //Tests for processOrder()
     @Test
     void shouldReturnOrderProcessedSuccessfully() {
         Order order = new Order(1, "Bottle", 10, 100.0);
@@ -39,34 +41,33 @@ class OrderServiceTest {
         when(repositoryMock.saveOrder(order)).thenThrow(new OrderSaveFailedException("Order processing failed"));
         String result = service.processOrder(order);
         assertEquals("Order processing failed", result);
-        verify(repositoryMock, times(1)).saveOrder(order);
+        verify(repositoryMock).saveOrder(order);
     }
 
     @Test
     void shouldThrowExceptionWithMessage_OrderIsNull() {
-        Order order = null;
-        when(repositoryMock.saveOrder(order)).thenThrow(new NullPointerException("Order is null!"));
-        Exception exception = assertThrows(NullPointerException.class, () -> service.processOrder(order));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> service.processOrder(null));
         assertEquals("Order is null!", exception.getMessage());
-        verify(repositoryMock, times(1)).saveOrder(order);
+        verifyNoInteractions(repositoryMock);
     }
 
+    //Tests for calculateTotal()
     @Test
     void shouldReturn300() {
         Order order = new Order(2, "Bottle", 3, 100.0);
         when(repositoryMock.getOrderById(2)).thenReturn(Optional.of(order));
         double result = service.calculateTotal(2);
-        assertEquals(300.0, result);
+        assertEquals(300.0, result, 1e-9);
         verify(repositoryMock, times(1)).getOrderById(2);
     }
 
     @Test
     void shouldThrowExceptionWithMessage_NoOrderToCalculateTotalPrice() {
         Order order = new Order(2, "Pen", 2, 50.0);
-        when(repositoryMock.getOrderById(2)).thenThrow(new EmptyOrderException("No order to calculate total price"));
+        when(repositoryMock.getOrderById(2)).thenReturn(Optional.empty());
         Exception exception = assertThrows(EmptyOrderException.class, () -> service.calculateTotal(2));
         assertEquals("No order to calculate total price", exception.getMessage());
-        verify(repositoryMock, times(1)).getOrderById(2);
+        verify(repositoryMock).getOrderById(2);
     }
 
     @Test
@@ -74,7 +75,7 @@ class OrderServiceTest {
         Order order = new Order(2, "Pen", 0, 0);
         when(repositoryMock.getOrderById(2)).thenReturn(Optional.of(order));
         double result = service.calculateTotal(2);
-        assertEquals(0.0, result);
-        verify(repositoryMock, times(1)).getOrderById(2);
+        assertEquals(0.0, result, 1e-9);
+        verify(repositoryMock).getOrderById(2);
     }
 }

@@ -14,14 +14,20 @@ public class OrderService {
 
     public String processOrder(Order order) {
         if (isNull(order)) {
-            throw new IllegalArgumentException("Order is null!");
+            throw new EmptyOrderException("Order is null!");
+        }
+        if (isNull(order.getProductName())) {
+            throw new IllegalArgumentException("Product name is null!");
+        }
+        if (isNull(order.getUnitPrice())) {
+            throw new IllegalArgumentException("Price is null!");
         }
         try {
             repository.saveOrder(order);
             return "Order processed successfully";
         }
-        catch (OrderSaveFailedException ex) {
-            return "Order processing failed";
+        catch (Exception ex) {
+            throw new OrderSaveFailedException("Order processing failed");
         }
     }
 
